@@ -1,0 +1,4 @@
+*{
+  overflow-x: hidden;
+  scrollbar-width: thin; /* Options: auto, thin, none */
+}
