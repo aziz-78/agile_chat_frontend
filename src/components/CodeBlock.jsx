@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton, Tooltip } from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const CodeBlock = ({
   code,
@@ -7,12 +9,23 @@ const CodeBlock = ({
   darkMode,
   theme,
   onTypingComplete,
-  disableTypingEffect = false
+  disableTypingEffect = false,
 }) => {
   const [displayedText, setDisplayedText] = useState(disableTypingEffect ? code : "");
   const [isTyping, setIsTyping] = useState(!disableTypingEffect);
   const typingTimerRef = useRef(null);
   const completedRef = useRef(false);
+
+  useEffect(() => {
+    completedRef.current = false;
+    if (disableTypingEffect) {
+      setDisplayedText(code);
+      setIsTyping(false);
+    } else {
+      setDisplayedText("");
+      setIsTyping(true);
+    }
+  }, [code, disableTypingEffect]);
 
   useEffect(() => {
     if (disableTypingEffect) {
@@ -21,8 +34,12 @@ const CodeBlock = ({
     }
 
     let currentIndex = 0;
-    
+
     if (isTyping) {
+      if (typingTimerRef.current) {
+        clearInterval(typingTimerRef.current);
+      }
+
       typingTimerRef.current = setInterval(() => {
         if (currentIndex < code.length) {
           setDisplayedText(code.substring(0, currentIndex + 1));
@@ -45,26 +62,58 @@ const CodeBlock = ({
     };
   }, [code, isTyping, disableTypingEffect, onTypingComplete]);
 
-  // Style for code block based on dark mode
-  const codeStyle = {
-    fontFamily: "monospace",
-    whiteSpace: "pre-wrap",
-    backgroundColor: darkMode ? '#1e1e1e' : '#f5f5f5',
-    color: darkMode ? '#d4d4d4' : '#333333',
-    padding: 2,
-    borderRadius: "6px",
-    overflowX: "auto",
-    fontSize: "0.9rem",
-    lineHeight: 1.5
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      //alert("Code copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy code:", err);
+    }
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "code.py";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Box sx={codeStyle}>
-        <Typography component="pre" sx={{ fontFamily: "inherit", m: 0 }}>
-          {displayedText}
-        </Typography>
+    <Box sx={{ position: "relative", p: 2, borderRadius: "6px", overflow: "hidden", backgroundColor: darkMode ? "#1e1e1e" : "#f5f5f5" }}>
+      {/* Icons at the top-right corner */}
+      <Box sx={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 1, zIndex: 10 }}>
+        <Tooltip title="Copy Code">
+          <IconButton size="small" onClick={handleCopy} sx={{ color: darkMode ? "#ffffff" : "#333333" }}>
+            <ContentCopyIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Download Code">
+          <IconButton size="small" onClick={handleDownload} sx={{ color: darkMode ? "#ffffff" : "#333333" }}>
+            <DownloadIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
+
+      {/* Code Display */}
+      <Typography
+        component="pre"
+        sx={{
+          fontFamily: "monospace",
+          whiteSpace: "pre-wrap",
+          color: darkMode ? "#d4d4d4" : "#333333",
+          fontSize: "0.9rem",
+          lineHeight: 1.5,
+          m: 0,
+          p: 2
+        }}
+      >
+        {displayedText}
+      </Typography>
     </Box>
   );
 };

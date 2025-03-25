@@ -59,7 +59,7 @@ const CodeEditorUI = () => {
   const [typedCode, setTypedCode] = useState("");
   const [messages, setMessages] = useState([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
-
+  
   // Hook to detect if user has scrolled up and show scroll-to-bottom button
   useEffect(() => {
     const handleScroll = () => {
@@ -152,11 +152,22 @@ const CodeEditorUI = () => {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      console.log("File selected:", file.name);
+  
+    if (file && file.name.endsWith(".py")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        console.log("Python file content:\n", e.target.result);
+        setCode(e.target.result);
+        
+      };
+      reader.readAsText(file);
+    } else {
+      alert("Only .py files are allowed.");
+      event.target.value = ""; // Reset the file input
     }
   };
+  
+  
   
   const handleIconClick = () => {
     document.getElementById("fileInput").click();
@@ -441,36 +452,45 @@ const CodeEditorUI = () => {
                 </Box>
               </Box>
               <Box sx={{ position: 'relative' }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={5}
-                  value={code}
-                  position="relative"
-                  variant="outlined"
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Type your code here..."
-                  sx={{
-                    mb: 2,
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: "8px",
-                      color: theme.text.primary,
-                      fontFamily: "'Fira Code', monospace",
-                      fontSize: "0.9rem",
-                      background: theme.secondary,
-                      transition: "background 0.3s ease",
-                      "& fieldset": {
-                        borderColor: theme.border
-                      },
-                      "&:hover fieldset": {
-                        borderColor: theme.active.border
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: theme.active.text
-                      }
-                    }
-                  }}
-                />
+              <TextField
+  fullWidth
+  multiline
+  minRows={5}
+  maxRows={5}
+  value={code}
+  position="relative"
+  variant="outlined"
+  onChange={(e) => setCode(e.target.value)}
+  placeholder="Type your code here..."
+  sx={{
+    mb: 2,
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "8px",
+      color: theme.text.primary,
+      fontFamily: "'Fira Code', monospace",
+      fontSize: "0.9rem",
+      background: theme.secondary,
+      transition: "background 0.3s ease",
+      overflow: "hidden",
+      "& textarea": {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        display: "-webkit-box",
+        WebkitLineClamp: 5,
+        WebkitBoxOrient: "vertical"
+      },
+      "& fieldset": {
+        borderColor: theme.border
+      },
+      "&:hover fieldset": {
+        borderColor: theme.active.border
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: theme.active.text
+      }
+    }
+  }}
+/>
                 <Box 
                   sx={{ 
                     position: 'absolute', 
@@ -482,11 +502,13 @@ const CodeEditorUI = () => {
                   }}
                 >
                   <input
-                    type="file"
-                    id="fileInput"
-                    style={{ display: "none" }}
-                    onChange={handleFileChange}
-                  />
+  type="file"
+  id="fileInput"
+  style={{ display: "none" }}
+  accept=".py"
+  onChange={handleFileChange}
+/>
+
                   <Tooltip title="Attach File">
                     <IconButton 
                       size="small" 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Typography, Skeleton } from "@mui/material";
-import CodeBlock  from "./CodeBlock"; 
+import  CodeBlock  from "./CodeBlock"; 
 
 const SequentialMessageBlocks = ({ messages, darkMode, theme }) => {
   const [displayedMessages, setDisplayedMessages] = useState([]);
@@ -9,18 +9,25 @@ const SequentialMessageBlocks = ({ messages, darkMode, theme }) => {
   const isTypingRef = useRef([]);
 
   useEffect(() => {
-    if (messages.length > prevMessagesRef.current.length) {
-      const newMessages = messages.slice(prevMessagesRef.current.length);
-      prevMessagesRef.current = messages;
+    // Check if messages have changed
+    if (JSON.stringify(messages) !== JSON.stringify(prevMessagesRef.current)) {
+      console.log("Messages changed:", messages);
+      prevMessagesRef.current = [...messages]; // Make a copy of messages
       
-      // Initialize typing status for new messages
-      if (isTypingRef.current.length === 0) {
-        isTypingRef.current = [true];
-      } else {
-        isTypingRef.current = [...isTypingRef.current.map(status => false), true];
+      // Reset typing status for all messages
+      if (messages.length === 0) {
+        isTypingRef.current = [];
+        setVisibleIndex(0);
+        setDisplayedMessages([]);
+        return;
       }
       
-      setDisplayedMessages(prev => [...prev, ...newMessages]);
+      // Initialize typing status
+      isTypingRef.current = Array(messages.length).fill(false);
+      isTypingRef.current[0] = true; // Start typing the first message
+      
+      setVisibleIndex(0);
+      setDisplayedMessages([...messages]); // Set all messages
     }
   }, [messages]);
 
@@ -30,15 +37,19 @@ const SequentialMessageBlocks = ({ messages, darkMode, theme }) => {
     
     // Move to next message if there is one
     if (index < displayedMessages.length - 1) {
-      setVisibleIndex(prevIndex => prevIndex + 1);
+      isTypingRef.current[index + 1] = true;
+      setVisibleIndex(index + 1);
     }
   };
 
   return (
     <Box>
-      {displayedMessages.slice(0, visibleIndex + 1).map((msg, index) => {
+      {displayedMessages.map((msg, index) => {
         const isFinalOutput = index === displayedMessages.length - 1;
-        const isCurrentlyTyping = index === visibleIndex;
+        const isCurrentlyTyping = index === visibleIndex && isTypingRef.current[index];
+        const shouldDisplay = index <= visibleIndex;
+        
+        if (!shouldDisplay) return null;
         
         return (
           <Box 
