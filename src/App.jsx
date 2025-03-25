@@ -305,12 +305,12 @@ const CodeEditorUI = () => {
                 src={darkMode ? logoDark : logoDark} 
                 width={40} 
                 height={40} 
-                alt="Agile Web Agent" 
+                alt="Agile Code Agent" 
                 style={{ objectFit: "contain" }}
               />
             </Box>
             <Typography variant="h5" sx={{ color: "white", fontWeight: 600, marginRight: "16px" }}>
-              Agile Web Agent
+              Agile Code Agent
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center" }}>
